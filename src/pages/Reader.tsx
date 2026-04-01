@@ -37,9 +37,15 @@ const Reader = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const visibleParagraphs = useRef<Set<number>>(new Set());
 
-  // Apply theme class to reader container
+  // Apply theme class to document root so CSS variables cascade everywhere
   useEffect(() => {
     localStorage.setItem('reader-theme', theme);
+    const root = document.documentElement;
+    root.classList.remove('dark', 'warm-blush');
+    if (theme !== 'light') root.classList.add(theme);
+    return () => {
+      root.classList.remove('dark', 'warm-blush');
+    };
   }, [theme]);
 
   const cycleTheme = () => {
