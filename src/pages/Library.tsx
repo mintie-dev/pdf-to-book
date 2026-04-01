@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Plus, BookOpen, Clock } from 'lucide-react';
-import { Book } from '@/types/book';
+import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon } from 'lucide-react';
+import { Book, ReadingStatus } from '@/types/book';
 import { getAllBooks, saveBook, deleteBook } from '@/lib/bookStorage';
 import { extractTextFromPdf } from '@/lib/pdfParser';
 import { useNavigate } from 'react-router-dom';
@@ -8,10 +8,18 @@ import BookCard from '@/components/BookCard';
 import EditBookDialog from '@/components/EditBookDialog';
 import { useToast } from '@/hooks/use-toast';
 
+const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
+  { key: 'all', label: 'All', icon: <LibraryIcon className="h-4 w-4" /> },
+  { key: 'want-to-read', label: 'Want to Read', icon: <BookMarked className="h-4 w-4" /> },
+  { key: 'reading', label: 'Reading', icon: <BookOpen className="h-4 w-4" /> },
+  { key: 'read', label: 'Read', icon: <BookCheck className="h-4 w-4" /> },
+];
+
 const Library = () => {
   const [books, setBooks] = useState<Book[]>(() => getAllBooks());
   const [loading, setLoading] = useState(false);
   const [editBook, setEditBook] = useState<Book | null>(null);
+  const [activeTab, setActiveTab] = useState<ReadingStatus | 'all'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -23,7 +31,6 @@ const Library = () => {
       toast({ title: 'Invalid file', description: 'Please upload a PDF file', variant: 'destructive' });
       return;
     }
-
     setLoading(true);
     try {
       const { title, paragraphs } = await extractTextFromPdf(file);
@@ -44,7 +51,7 @@ const Library = () => {
       saveBook(book);
       setBooks(getAllBooks());
       toast({ title: 'Book added!', description: `"${title}" has been added to your library` });
-    } catch (err) {
+    } catch {
       toast({ title: 'Error', description: 'Failed to process PDF file', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -63,11 +70,23 @@ const Library = () => {
     setEditBook(null);
   };
 
-  const sortedBooks = [...books].sort((a, b) => b.lastReadAt - a.lastReadAt);
+  const handleStatusChange = (bookId: string, status: ReadingStatus) => {
+    const b = books.find(x => x.id === bookId);
+    if (b) {
+      b.readingStatus = status;
+      saveBook(b);
+      setBooks(getAllBooks());
+    }
+  };
+
+  const filteredBooks = activeTab === 'all'
+    ? books
+    : books.filter(b => b.readingStatus === activeTab);
+
+  const sortedBooks = [...filteredBooks].sort((a, b) => b.lastReadAt - a.lastReadAt);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-lg">
         <div className="mx-auto max-w-4xl px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -82,24 +101,36 @@ const Library = () => {
             <Plus className="h-4 w-4" />
             {loading ? 'Processing...' : 'Add Book'}
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={handleFileUpload}
-          />
+          <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileUpload} />
+        </div>
+        {/* Tabs */}
+        <div className="mx-auto max-w-4xl px-4 pb-2 flex gap-1 overflow-x-auto scrollbar-none">
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
       </header>
 
-      {/* Content */}
       <main className="mx-auto max-w-4xl px-4 py-6">
         {sortedBooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="mb-4 rounded-full bg-secondary p-6">
               <BookOpen className="h-12 w-12 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-medium text-foreground mb-2">Your library is empty</h2>
+            <h2 className="text-lg font-medium text-foreground mb-2">
+              {activeTab === 'all' ? 'Your library is empty' : `No books in "${tabs.find(t => t.key === activeTab)?.label}"`}
+            </h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
               Upload a PDF to start reading. Your books and progress will be saved automatically.
             </p>
@@ -119,6 +150,7 @@ const Library = () => {
                 onRead={() => navigate(`/read/${book.id}`)}
                 onEdit={() => setEditBook(book)}
                 onDelete={() => handleDelete(book.id)}
+                onStatusChange={(status) => handleStatusChange(book.id, status)}
               />
             ))}
           </div>
@@ -126,11 +158,7 @@ const Library = () => {
       </main>
 
       {editBook && (
-        <EditBookDialog
-          book={editBook}
-          onClose={() => setEditBook(null)}
-          onSave={handleEditSave}
-        />
+        <EditBookDialog book={editBook} onClose={() => setEditBook(null)} onSave={handleEditSave} />
       )}
     </div>
   );
