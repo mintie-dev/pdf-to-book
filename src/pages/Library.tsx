@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
-import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload } from 'lucide-react';
-import { Book, ReadingStatus } from '@/types/book';
+import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Sun, Moon, Flower2 } from 'lucide-react';
+import { Book, ReadingStatus, ReaderTheme } from '@/types/book';
 import { getAllBooks, saveBook, deleteBook } from '@/lib/bookStorage';
 import { extractTextFromPdf } from '@/lib/pdfParser';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
 import BookCard from '@/components/BookCard';
 import EditBookDialog from '@/components/EditBookDialog';
 import BookDiscovery from '@/components/BookDiscovery';
@@ -17,6 +18,12 @@ const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }
   { key: 'read', label: 'Read', icon: <BookCheck className="h-4 w-4" /> },
 ];
 
+const themeIcons: Record<ReaderTheme, React.ReactNode> = {
+  light: <Sun className="h-4 w-4" />,
+  dark: <Moon className="h-4 w-4" />,
+  'warm-blush': <Flower2 className="h-4 w-4" />,
+};
+
 type ViewMode = 'library' | 'discover' | 'import';
 
 const Library = () => {
@@ -27,6 +34,7 @@ const Library = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('library');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { theme, cycleTheme } = useTheme();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,24 +92,36 @@ const Library = () => {
     }
   };
 
-  const handleImportFromOpenLibrary = (title: string, author: string, coverUrl: string | null) => {
+  const handleTogglePin = (bookId: string) => {
+    const b = books.find(x => x.id === bookId);
+    if (!b) return;
+    const pinnedCount = books.filter(x => x.pinned && x.id !== bookId).length;
+    if (!b.pinned && pinnedCount >= 3) {
+      toast.error('You can pin up to 3 books', { duration: 3000 });
+      return;
+    }
+    b.pinned = !b.pinned;
+    saveBook(b);
+    setBooks(getAllBooks());
+  };
+
+  const handleImportFromOpenLibrary = (title: string, author: string, coverUrl: string | null, content?: string[]) => {
     const book: Book = {
       id: crypto.randomUUID(),
       title,
       author,
       coverUrl,
-      content: [],
+      content: content || [],
       highlights: [],
       bookmarks: [],
       lastReadParagraph: 0,
       lastReadAt: Date.now(),
       addedAt: Date.now(),
-      totalParagraphs: 0,
+      totalParagraphs: content?.length || 0,
       readingStatus: 'want-to-read',
     };
     saveBook(book);
     setBooks(getAllBooks());
-    toast.success(`"${title}" added to your library`, { duration: 3000 });
   };
 
   const handleGoodreadsImport = (entries: { title: string; author: string; readingStatus: ReadingStatus }[]) => {
@@ -134,11 +154,18 @@ const Library = () => {
     ? books
     : books.filter(b => b.readingStatus === activeTab);
 
-  const sortedBooks = [...filteredBooks].sort((a, b) => b.lastReadAt - a.lastReadAt);
+  const pinnedCount = books.filter(b => b.pinned).length;
+
+  // Sort: pinned first, then by lastReadAt descending
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.lastReadAt - a.lastReadAt;
+  });
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-lg">
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-lg transition-colors duration-300">
         <div className="mx-auto max-w-4xl px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => setViewMode('library')}
@@ -148,6 +175,13 @@ const Library = () => {
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
           </button>
           <div className="flex items-center gap-2">
+            <button
+              onClick={cycleTheme}
+              className="rounded-full p-2 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105"
+              title={`Theme: ${theme}`}
+            >
+              {themeIcons[theme]}
+            </button>
             <button
               onClick={() => setViewMode(viewMode === 'discover' ? 'library' : 'discover')}
               className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'discover' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}
@@ -244,6 +278,8 @@ const Library = () => {
                       onEdit={() => setEditBook(book)}
                       onDelete={() => handleDelete(book.id)}
                       onStatusChange={(status) => handleStatusChange(book.id, status)}
+                      onTogglePin={() => handleTogglePin(book.id)}
+                      canPin={book.pinned || pinnedCount < 3}
                     />
                   </div>
                 ))}
