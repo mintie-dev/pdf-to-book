@@ -52,6 +52,9 @@ const Reader = () => {
 
   useEffect(() => {
     if (!book || !contentRef.current) return;
+    maxReadParagraph.current = book.lastReadParagraph || 0;
+    goalNotified.current = false;
+    
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
@@ -61,14 +64,36 @@ const Reader = () => {
         });
         const visible = Array.from(visibleParagraphs.current);
         if (visible.length > 0) {
+          const maxVisible = Math.max(...visible);
           const minIdx = Math.min(...visible);
+          
+          // Log new pages read
+          if (maxVisible > maxReadParagraph.current) {
+            const newPages = maxVisible - maxReadParagraph.current;
+            logPagesRead(newPages);
+            maxReadParagraph.current = maxVisible;
+            
+            // Check daily goal completion
+            if (!goalNotified.current) {
+              const goal = getReadingGoal();
+              const todayTotal = getTodayPages();
+              if (todayTotal >= goal.pagesPerDay) {
+                goalNotified.current = true;
+                toast('🎉 Daily reading goal complete!', { duration: 4000 });
+              }
+            }
+          }
+          
+          // Update reading position in real-time
           updateReadingPosition(book.id, minIdx);
+          setBook(prev => prev ? { ...prev, lastReadParagraph: minIdx } : null);
+          
           if (minIdx >= book.totalParagraphs - 3 && book.readingStatus !== 'read') {
             const updated = getBook(book.id);
             if (updated) {
               updated.readingStatus = 'read';
               saveBook(updated);
-              setBook({ ...book, readingStatus: 'read' });
+              setBook(prev => prev ? { ...prev, readingStatus: 'read' } : null);
             }
           }
         }
@@ -78,7 +103,7 @@ const Reader = () => {
     const paragraphs = contentRef.current.querySelectorAll('[data-idx]');
     paragraphs.forEach(p => observerRef.current?.observe(p));
     return () => observerRef.current?.disconnect();
-  }, [book]);
+  }, [book?.id]);
 
   useEffect(() => {
     if (!book || !contentRef.current) return;
