@@ -8,6 +8,7 @@ import {
   setReadingGoal,
   getTodayPages,
   getRecordPages,
+  getTotalPages12Weeks,
 } from '@/lib/readingLog';
 
 const ReadingLog = () => {
@@ -20,6 +21,7 @@ const ReadingLog = () => {
   const todayGoalMet = todayPages >= goal.pagesPerDay;
   const contributions = getContributionData(12);
   const record = getRecordPages();
+  const totalPages12w = getTotalPages12Weeks();
 
   const handleSaveGoal = () => {
     const newGoal = { pagesPerDay: sliderVal };
@@ -166,6 +168,13 @@ const ReadingLog = () => {
             Read <span className="font-semibold text-foreground">{goal.pagesPerDay} pages</span> every day
           </p>
         )}
+      </div>
+
+      {/* 12-week total */}
+      <div className="rounded-lg bg-secondary p-2.5 text-center">
+        <p className="text-[10px] font-medium text-muted-foreground uppercase">Past 12 Weeks</p>
+        <p className="text-lg font-bold text-foreground leading-tight">{totalPages12w.toLocaleString()}</p>
+        <p className="text-[9px] text-muted-foreground">total pages read</p>
       </div>
     </div>
   );
