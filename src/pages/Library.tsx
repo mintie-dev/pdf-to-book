@@ -32,6 +32,7 @@ const Library = () => {
   const [editBook, setEditBook] = useState<Book | null>(null);
   const [activeTab, setActiveTab] = useState<ReadingStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('library');
+  const [fabExpanded, setFabExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { theme, cycleTheme } = useTheme();
@@ -156,7 +157,6 @@ const Library = () => {
 
   const pinnedCount = books.filter(b => b.pinned).length;
 
-  // Sort: pinned first, then by lastReadAt descending
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
@@ -196,14 +196,6 @@ const Library = () => {
             >
               <Upload className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4" />
-              {loading ? 'Processing...' : 'Add PDF'}
-            </button>
           </div>
           <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileUpload} />
         </div>
@@ -227,11 +219,12 @@ const Library = () => {
         )}
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
+      <main className="mx-auto max-w-4xl px-4 py-6 pb-24">
         {viewMode === 'discover' && (
           <div className="mb-6 animate-[fade-in_0.3s_ease-out]">
             <h2 className="text-lg font-semibold text-foreground mb-3">Discover Books</h2>
-            <p className="text-sm text-muted-foreground mb-4">Search Open Library for free public domain books and add them to your library.</p>
+            <p className="text-sm text-muted-foreground mb-2">Search Open Library for free public domain books and add them to your library.</p>
+            <p className="text-xs text-muted-foreground/70 mb-4 italic">⚠️ Not all books have free content available. Books without content will be added to "Want to Read" — you can upload a PDF later.</p>
             <BookDiscovery onImportBook={handleImportFromOpenLibrary} />
           </div>
         )}
@@ -280,6 +273,7 @@ const Library = () => {
                       onStatusChange={(status) => handleStatusChange(book.id, status)}
                       onTogglePin={() => handleTogglePin(book.id)}
                       canPin={book.pinned || pinnedCount < 3}
+                      onBookUpdated={() => setBooks(getAllBooks())}
                     />
                   </div>
                 ))}
@@ -288,6 +282,29 @@ const Library = () => {
           </>
         )}
       </main>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-6 right-6 z-20">
+        <button
+          onClick={() => {
+            if (fabExpanded) {
+              fileInputRef.current?.click();
+            }
+            setFabExpanded(!fabExpanded);
+          }}
+          onMouseEnter={() => setFabExpanded(true)}
+          onMouseLeave={() => setFabExpanded(false)}
+          disabled={loading}
+          className={`flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 ${
+            fabExpanded ? 'px-5 py-3.5' : 'p-3.5'
+          }`}
+        >
+          <Plus className={`h-5 w-5 transition-transform duration-300 ${fabExpanded ? 'rotate-0' : 'rotate-0'}`} />
+          <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${fabExpanded ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
+            {loading ? 'Processing...' : 'Add PDF'}
+          </span>
+        </button>
+      </div>
 
       {editBook && (
         <EditBookDialog book={editBook} onClose={() => setEditBook(null)} onSave={handleEditSave} />
