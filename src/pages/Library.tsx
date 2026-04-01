@@ -39,6 +39,7 @@ const Library = () => {
         lastReadAt: Date.now(),
         addedAt: Date.now(),
         totalParagraphs: paragraphs.length,
+        readingStatus: 'want-to-read',
       };
       saveBook(book);
       setBooks(getAllBooks());
