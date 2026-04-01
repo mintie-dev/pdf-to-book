@@ -36,6 +36,8 @@ const Reader = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const visibleParagraphs = useRef<Set<number>>(new Set());
+  const maxReadParagraph = useRef<number>(0);
+  const goalNotified = useRef(false);
 
   useEffect(() => {
     if (!id) return;
