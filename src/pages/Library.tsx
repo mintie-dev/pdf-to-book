@@ -33,13 +33,14 @@ const Library = () => {
     }
     setLoading(true);
     try {
-      const { title, paragraphs } = await extractTextFromPdf(file);
+      const { title, paragraphs, formattedParagraphs } = await extractTextFromPdf(file);
       const book: Book = {
         id: crypto.randomUUID(),
         title,
         author: 'Unknown Author',
         coverUrl: null,
         content: paragraphs,
+        paragraphFormats: formattedParagraphs.map(p => ({ format: p.format })),
         highlights: [],
         bookmarks: [],
         lastReadParagraph: 0,

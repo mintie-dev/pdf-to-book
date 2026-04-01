@@ -1,13 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bookmark, BookmarkCheck, List, Type, Minus, Plus, Search } from 'lucide-react';
-import { Book, Highlight, Bookmark as BookmarkType } from '@/types/book';
+import { ArrowLeft, Bookmark, BookmarkCheck, List, Type, Minus, Plus, Search, Sun, Moon, Flower2 } from 'lucide-react';
+import { Book, Highlight, Bookmark as BookmarkType, ReaderTheme } from '@/types/book';
 import { getBook, updateReadingPosition, addHighlight, removeHighlight, addBookmark, removeBookmark, saveBook } from '@/lib/bookStorage';
 import { lookupWord, DictionaryResult } from '@/lib/dictionary';
 import HighlightToolbar from '@/components/HighlightToolbar';
 import DictionaryPopup from '@/components/DictionaryPopup';
 import BookmarkPanel from '@/components/BookmarkPanel';
 import SearchBar from '@/components/SearchBar';
+
+const themeIcons: Record<ReaderTheme, React.ReactNode> = {
+  light: <Sun className="h-5 w-5" />,
+  dark: <Moon className="h-5 w-5" />,
+  'warm-blush': <Flower2 className="h-5 w-5" />,
+};
+const themeOrder: ReaderTheme[] = ['light', 'dark', 'warm-blush'];
 
 const Reader = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +24,9 @@ const Reader = () => {
   const [showToolbar, setShowToolbar] = useState(true);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [theme, setTheme] = useState<ReaderTheme>(() =>
+    (localStorage.getItem('reader-theme') as ReaderTheme) || 'light'
+  );
   const [selectedText, setSelectedText] = useState('');
   const [selectionRange, setSelectionRange] = useState<{ paragraphIndex: number; startOffset: number; endOffset: number; text: string } | null>(null);
   const [dictResult, setDictResult] = useState<DictionaryResult | null>(null);
@@ -27,11 +37,20 @@ const Reader = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const visibleParagraphs = useRef<Set<number>>(new Set());
 
+  // Apply theme class to reader container
+  useEffect(() => {
+    localStorage.setItem('reader-theme', theme);
+  }, [theme]);
+
+  const cycleTheme = () => {
+    const idx = themeOrder.indexOf(theme);
+    setTheme(themeOrder[(idx + 1) % themeOrder.length]);
+  };
+
   useEffect(() => {
     if (!id) return;
     const b = getBook(id);
     if (!b) { navigate('/'); return; }
-    // Auto-set reading status
     if (b.readingStatus === 'want-to-read') {
       b.readingStatus = 'reading';
       saveBook(b);
@@ -49,7 +68,19 @@ const Reader = () => {
           else visibleParagraphs.current.delete(idx);
         });
         const visible = Array.from(visibleParagraphs.current);
-        if (visible.length > 0) updateReadingPosition(book.id, Math.min(...visible));
+        if (visible.length > 0) {
+          const minIdx = Math.min(...visible);
+          updateReadingPosition(book.id, minIdx);
+          // Auto mark as "read" when reaching the end
+          if (minIdx >= book.totalParagraphs - 3 && book.readingStatus !== 'read') {
+            const updated = getBook(book.id);
+            if (updated) {
+              updated.readingStatus = 'read';
+              saveBook(updated);
+              setBook({ ...book, readingStatus: 'read' });
+            }
+          }
+        }
       },
       { threshold: 0.5 }
     );
@@ -73,22 +104,16 @@ const Reader = () => {
       setSelectedText('');
       return;
     }
-
     const text = selection.toString().trim();
     setSelectedText(text);
 
     const anchorNode = selection.anchorNode;
-    const focusNode = selection.focusNode;
     const paragraphEl = anchorNode?.parentElement?.closest('[data-idx]');
-    
     if (paragraphEl) {
       const paragraphIndex = parseInt(paragraphEl.getAttribute('data-idx') || '0');
       const paragraphText = paragraphEl.textContent || '';
-      
-      // Find the actual position of selected text within the paragraph
       const startOffset = paragraphText.indexOf(text);
       const endOffset = startOffset >= 0 ? startOffset + text.length : 0;
-      
       setSelectionRange({
         paragraphIndex,
         startOffset: startOffset >= 0 ? startOffset : selection.anchorOffset,
@@ -174,13 +199,8 @@ const Reader = () => {
     const highlights = book.highlights.filter(h => h.paragraphIndex === idx);
     if (highlights.length === 0) return text;
 
-    // Build segments with highlights applied to specific text ranges
-    type Segment = { text: string; highlight: Highlight | null };
-    const segments: Segment[] = [{ text, highlight: null }];
-
-    // Sort highlights by startOffset
     const sorted = [...highlights].sort((a, b) => a.startOffset - b.startOffset);
-
+    type Segment = { text: string; highlight: Highlight | null };
     const result: Segment[] = [];
     let remaining = text;
     let offset = 0;
@@ -188,23 +208,14 @@ const Reader = () => {
     for (const hl of sorted) {
       const start = hl.startOffset - offset;
       const end = hl.endOffset - offset;
-
       if (start < 0 || start >= remaining.length) continue;
-
-      // Before highlight
-      if (start > 0) {
-        result.push({ text: remaining.slice(0, start), highlight: null });
-      }
-      // Highlighted part
+      if (start > 0) result.push({ text: remaining.slice(0, start), highlight: null });
       result.push({ text: remaining.slice(start, Math.min(end, remaining.length)), highlight: hl });
-      // Update remaining
       const consumed = Math.min(end, remaining.length);
       remaining = remaining.slice(consumed);
       offset += consumed;
     }
-    if (remaining) {
-      result.push({ text: remaining, highlight: null });
-    }
+    if (remaining) result.push({ text: remaining, highlight: null });
 
     return (
       <>
@@ -229,47 +240,61 @@ const Reader = () => {
     );
   };
 
+  const getFormatClasses = (idx: number) => {
+    const fmt = book?.paragraphFormats?.[idx]?.format;
+    if (!fmt) return '';
+    switch (fmt) {
+      case 'centered': return 'text-centered';
+      case 'large': return 'text-large';
+      case 'medium': return 'text-medium';
+      case 'spacer': return 'spacer-paragraph';
+      default: return '';
+    }
+  };
+
   if (!book) return null;
 
+  // Determine theme class for container
+  const themeClass = theme === 'dark' ? 'dark' : theme === 'warm-blush' ? 'warm-blush' : '';
+
   return (
-    <div className="min-h-screen bg-reader flex flex-col">
+    <div className={`min-h-screen flex flex-col ${themeClass}`} style={{ backgroundColor: 'hsl(var(--reader-bg))', color: 'hsl(var(--reader-foreground))' }}>
       {showToolbar && (
-        <header className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur-lg transition-all">
+        <header className="sticky top-0 z-20 border-b transition-all" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--card) / 0.9)', backdropFilter: 'blur(12px)' }}>
           <div className="flex items-center justify-between px-4 py-3">
-            <button onClick={() => navigate('/')} className="rounded-full p-2 hover:bg-secondary active:scale-95">
-              <ArrowLeft className="h-5 w-5 text-foreground" />
+            <button onClick={() => navigate('/')} className="rounded-full p-2 hover:opacity-70 active:scale-95">
+              <ArrowLeft className="h-5 w-5" />
             </button>
-            <h2 className="text-sm font-medium text-foreground line-clamp-1 max-w-[40%] text-center">
+            <h2 className="text-sm font-medium line-clamp-1 max-w-[35%] text-center">
               {book.title}
             </h2>
             <div className="flex items-center gap-1">
-              <button onClick={() => setShowSearch(s => !s)} className="rounded-full p-2 hover:bg-secondary">
-                <Search className="h-5 w-5 text-muted-foreground" />
+              <button onClick={cycleTheme} className="rounded-full p-2 hover:opacity-70" title={`Theme: ${theme}`}>
+                {themeIcons[theme]}
               </button>
-              <button onClick={handleToggleBookmark} className="rounded-full p-2 hover:bg-secondary">
+              <button onClick={() => setShowSearch(s => !s)} className="rounded-full p-2 hover:opacity-70">
+                <Search className="h-5 w-5" />
+              </button>
+              <button onClick={handleToggleBookmark} className="rounded-full p-2 hover:opacity-70">
                 {isCurrentBookmarked() ? (
-                  <BookmarkCheck className="h-5 w-5 text-primary" />
+                  <BookmarkCheck className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
                 ) : (
-                  <Bookmark className="h-5 w-5 text-muted-foreground" />
+                  <Bookmark className="h-5 w-5 opacity-60" />
                 )}
               </button>
-              <button onClick={() => setShowBookmarks(!showBookmarks)} className="rounded-full p-2 hover:bg-secondary">
-                <List className="h-5 w-5 text-muted-foreground" />
+              <button onClick={() => setShowBookmarks(!showBookmarks)} className="rounded-full p-2 hover:opacity-70">
+                <List className="h-5 w-5 opacity-60" />
               </button>
             </div>
           </div>
-          <div className="h-0.5 bg-muted">
-            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
+          <div className="h-0.5" style={{ backgroundColor: 'hsl(var(--muted))' }}>
+            <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--primary))' }} />
           </div>
         </header>
       )}
 
       {showSearch && (
-        <SearchBar
-          content={book.content}
-          onNavigateToMatch={scrollToParagraph}
-          onClose={() => setShowSearch(false)}
-        />
+        <SearchBar content={book.content} onNavigateToMatch={scrollToParagraph} onClose={() => setShowSearch(false)} />
       )}
 
       <main
@@ -277,33 +302,39 @@ const Reader = () => {
         className="flex-1 mx-auto w-full max-w-2xl px-5 sm:px-8 py-8"
         onClick={() => setShowToolbar(prev => !prev)}
       >
-        {book.content.map((para, idx) => (
-          <p
-            key={idx}
-            data-idx={idx}
-            className="reader-text mb-4 text-reader-foreground leading-relaxed"
-            style={{ fontSize: `${fontSize}px` }}
-          >
-            {renderParagraph(para, idx)}
-          </p>
-        ))}
+        {book.content.map((para, idx) => {
+          const fmt = getFormatClasses(idx);
+          if (book.paragraphFormats?.[idx]?.format === 'spacer') {
+            return <div key={idx} data-idx={idx} className="h-6" />;
+          }
+          return (
+            <p
+              key={idx}
+              data-idx={idx}
+              className={`reader-text mb-4 leading-relaxed ${fmt}`}
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {renderParagraph(para, idx)}
+            </p>
+          );
+        })}
         <div className="h-32" />
       </main>
 
       {showToolbar && (
-        <div className="sticky bottom-0 border-t border-border bg-card/90 backdrop-blur-lg">
+        <div className="sticky bottom-0 border-t" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--card) / 0.9)', backdropFilter: 'blur(12px)' }}>
           <div className="flex items-center justify-center gap-4 px-4 py-3">
-            <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.max(12, s - 2)); }} className="rounded-full p-2 hover:bg-secondary">
-              <Minus className="h-4 w-4 text-muted-foreground" />
+            <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.max(12, s - 2)); }} className="rounded-full p-2 hover:opacity-70">
+              <Minus className="h-4 w-4 opacity-60" />
             </button>
             <div className="flex items-center gap-1.5">
-              <Type className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground w-8 text-center">{fontSize}</span>
+              <Type className="h-4 w-4 opacity-60" />
+              <span className="text-sm opacity-60 w-8 text-center">{fontSize}</span>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.min(32, s + 2)); }} className="rounded-full p-2 hover:bg-secondary">
-              <Plus className="h-4 w-4 text-muted-foreground" />
+            <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.min(32, s + 2)); }} className="rounded-full p-2 hover:opacity-70">
+              <Plus className="h-4 w-4 opacity-60" />
             </button>
-            <span className="text-xs text-muted-foreground ml-4">{progress}%</span>
+            <span className="text-xs opacity-60 ml-4">{progress}%</span>
           </div>
         </div>
       )}
