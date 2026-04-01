@@ -101,6 +101,23 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
+
+.reader-text {
+  font-family: 'Merriweather', Georgia, serif;
+  line-height: 1.9;
+  letter-spacing: 0.01em;
+}
+
+.highlight-yellow { background-color: hsl(var(--highlight-yellow)); }
+.highlight-blue { background-color: hsl(var(--highlight-blue)); }
+.highlight-pink { background-color: hsl(var(--highlight-pink)); }
+.highlight-green { background-color: hsl(var(--highlight-green)); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
