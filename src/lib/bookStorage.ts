@@ -4,7 +4,9 @@ const BOOKS_KEY = 'ebook-reader-books';
 
 export function getAllBooks(): Book[] {
   const data = localStorage.getItem(BOOKS_KEY);
-  return data ? JSON.parse(data) : [];
+  const books: Book[] = data ? JSON.parse(data) : [];
+  // Backfill readingStatus for older books
+  return books.map(b => ({ ...b, readingStatus: b.readingStatus || 'want-to-read' }));
 }
 
 export function getBook(id: string): Book | undefined {

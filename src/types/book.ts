@@ -15,6 +15,8 @@ export interface Bookmark {
   createdAt: number;
 }
 
+export type ReadingStatus = 'want-to-read' | 'reading' | 'read';
+
 export interface Book {
   id: string;
   title: string;
@@ -27,4 +29,5 @@ export interface Book {
   lastReadAt: number;
   addedAt: number;
   totalParagraphs: number;
+  readingStatus: ReadingStatus;
 }
