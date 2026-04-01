@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        reader: {
+          DEFAULT: "hsl(var(--reader-bg))",
+          foreground: "hsl(var(--reader-foreground))",
+        },
+        highlight: {
+          yellow: "hsl(var(--highlight-yellow))",
+          blue: "hsl(var(--highlight-blue))",
+          pink: "hsl(var(--highlight-pink))",
+          green: "hsl(var(--highlight-green))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
