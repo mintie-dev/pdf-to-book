@@ -169,6 +169,13 @@ const ReadingLog = () => {
           </p>
         )}
       </div>
+
+      {/* 12-week total */}
+      <div className="rounded-lg bg-secondary p-2.5 text-center">
+        <p className="text-[10px] font-medium text-muted-foreground uppercase">Past 12 Weeks</p>
+        <p className="text-lg font-bold text-foreground leading-tight">{totalPages12w.toLocaleString()}</p>
+        <p className="text-[9px] text-muted-foreground">total pages read</p>
+      </div>
     </div>
   );
 };
