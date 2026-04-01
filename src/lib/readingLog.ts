@@ -67,13 +67,18 @@ export function getCurrentStreak(): number {
     if (entry && entry.pagesRead >= goal.pagesPerDay) {
       streak++;
     } else if (i === 0) {
-      // Today not yet met is ok, continue checking
       continue;
     } else {
       break;
     }
   }
   return streak;
+}
+
+export function getRecordPages(): number {
+  const log = getReadingLog();
+  if (log.length === 0) return 0;
+  return Math.max(...log.map(e => e.pagesRead));
 }
 
 export function getContributionData(weeks: number = 12): { date: string; pagesRead: number; goalMet: boolean }[] {
