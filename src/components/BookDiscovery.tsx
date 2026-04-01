@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Loader2, ExternalLink, BookOpen } from 'lucide-react';
+import { Search, Loader2, ExternalLink, BookOpen, Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface OpenLibraryBook {
   key: string;
@@ -7,17 +8,18 @@ interface OpenLibraryBook {
   author_name?: string[];
   cover_i?: number;
   first_publish_year?: number;
-  ia?: string[]; // Internet Archive identifiers for free downloads
+  ia?: string[];
 }
 
 interface BookDiscoveryProps {
-  onImportBook?: (title: string, author: string, coverUrl: string | null) => void;
+  onImportBook?: (title: string, author: string, coverUrl: string | null, content?: string[]) => void;
 }
 
 const BookDiscovery = ({ onImportBook }: BookDiscoveryProps) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<OpenLibraryBook[]>([]);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState<string | null>(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -41,6 +43,80 @@ const BookDiscovery = ({ onImportBook }: BookDiscoveryProps) => {
       return `https://archive.org/details/${book.ia[0]}`;
     }
     return `https://openlibrary.org${book.key}`;
+  };
+
+  const fetchBookContent = async (book: OpenLibraryBook): Promise<string[]> => {
+    // Try to get full text from Internet Archive
+    if (book.ia && book.ia.length > 0) {
+      try {
+        const txtUrl = `https://archive.org/download/${book.ia[0]}/${book.ia[0]}_djvu.txt`;
+        const res = await fetch(txtUrl);
+        if (res.ok) {
+          const text = await res.text();
+          // Split into paragraphs by double newlines
+          const paragraphs = text
+            .split(/\n\s*\n/)
+            .map(p => p.replace(/\n/g, ' ').trim())
+            .filter(p => p.length > 0);
+          if (paragraphs.length > 0) return paragraphs;
+        }
+      } catch {
+        // Fall through to next method
+      }
+    }
+
+    // Try to get plaintext from Open Library
+    try {
+      const workId = book.key.replace('/works/', '');
+      const editionsRes = await fetch(`https://openlibrary.org/works/${workId}/editions.json?limit=5`);
+      const editionsData = await editionsRes.json();
+      for (const edition of editionsData.entries || []) {
+        if (edition.ocaid) {
+          try {
+            const txtUrl = `https://archive.org/download/${edition.ocaid}/${edition.ocaid}_djvu.txt`;
+            const res = await fetch(txtUrl);
+            if (res.ok) {
+              const text = await res.text();
+              const paragraphs = text
+                .split(/\n\s*\n/)
+                .map(p => p.replace(/\n/g, ' ').trim())
+                .filter(p => p.length > 0);
+              if (paragraphs.length > 0) return paragraphs;
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+    } catch {
+      // No content available
+    }
+
+    return [];
+  };
+
+  const handleImport = async (book: OpenLibraryBook) => {
+    if (!onImportBook) return;
+    setImporting(book.key);
+
+    try {
+      const content = await fetchBookContent(book);
+      onImportBook(
+        book.title,
+        book.author_name?.[0] || 'Unknown Author',
+        getCoverUrl(book.cover_i),
+        content
+      );
+      if (content.length > 0) {
+        toast.success(`"${book.title}" imported with full text`, { duration: 3000 });
+      } else {
+        toast.success(`"${book.title}" added (no free text available)`, { duration: 3000 });
+      }
+    } catch {
+      toast.error('Failed to import book');
+    } finally {
+      setImporting(null);
+    }
   };
 
   return (
@@ -69,7 +145,7 @@ const BookDiscovery = ({ onImportBook }: BookDiscoveryProps) => {
       {results.length > 0 && (
         <div className="space-y-2 max-h-96 overflow-y-auto rounded-lg border border-border">
           {results.map((book) => (
-            <div key={book.key} className="flex items-start gap-3 p-3 border-b border-border last:border-0 hover:bg-secondary/50">
+            <div key={book.key} className="flex items-start gap-3 p-3 border-b border-border last:border-0 hover:bg-secondary/50 transition-colors">
               {getCoverUrl(book.cover_i) ? (
                 <img src={getCoverUrl(book.cover_i)!} alt={book.title} className="w-10 h-14 rounded object-cover shrink-0" />
               ) : (
@@ -95,14 +171,16 @@ const BookDiscovery = ({ onImportBook }: BookDiscoveryProps) => {
                   </a>
                   {onImportBook && (
                     <button
-                      onClick={() => onImportBook(
-                        book.title,
-                        book.author_name?.[0] || 'Unknown Author',
-                        getCoverUrl(book.cover_i)
-                      )}
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => handleImport(book)}
+                      disabled={importing === book.key}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
                     >
-                      Add to library
+                      {importing === book.key ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Download className="h-3 w-3" />
+                      )}
+                      {importing === book.key ? 'Importing...' : 'Add to library'}
                     </button>
                   )}
                 </div>

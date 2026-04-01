@@ -37,4 +37,5 @@ export interface Book {
   addedAt: number;
   totalParagraphs: number;
   readingStatus: ReadingStatus;
+  pinned?: boolean;
 }

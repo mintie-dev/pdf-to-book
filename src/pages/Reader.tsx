@@ -4,6 +4,7 @@ import { ArrowLeft, Bookmark, BookmarkCheck, List, Type, Minus, Plus, Search, Su
 import { Book, Highlight, Bookmark as BookmarkType, ReaderTheme } from '@/types/book';
 import { getBook, updateReadingPosition, addHighlight, removeHighlight, addBookmark, removeBookmark, saveBook } from '@/lib/bookStorage';
 import { lookupWord, DictionaryResult } from '@/lib/dictionary';
+import { useTheme } from '@/hooks/useTheme';
 import HighlightToolbar from '@/components/HighlightToolbar';
 import DictionaryPopup from '@/components/DictionaryPopup';
 import BookmarkPanel from '@/components/BookmarkPanel';
@@ -14,7 +15,6 @@ const themeIcons: Record<ReaderTheme, React.ReactNode> = {
   dark: <Moon className="h-5 w-5" />,
   'warm-blush': <Flower2 className="h-5 w-5" />,
 };
-const themeOrder: ReaderTheme[] = ['light', 'dark', 'warm-blush'];
 
 const Reader = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,9 +24,7 @@ const Reader = () => {
   const [showToolbar, setShowToolbar] = useState(true);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [theme, setTheme] = useState<ReaderTheme>(() =>
-    (localStorage.getItem('reader-theme') as ReaderTheme) || 'light'
-  );
+  const { theme, cycleTheme } = useTheme();
   const [selectedText, setSelectedText] = useState('');
   const [selectionRange, setSelectionRange] = useState<{ paragraphIndex: number; startOffset: number; endOffset: number; text: string } | null>(null);
   const [dictResult, setDictResult] = useState<DictionaryResult | null>(null);
@@ -36,22 +34,6 @@ const Reader = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const visibleParagraphs = useRef<Set<number>>(new Set());
-
-  // Apply theme class to document root so CSS variables cascade everywhere
-  useEffect(() => {
-    localStorage.setItem('reader-theme', theme);
-    const root = document.documentElement;
-    root.classList.remove('dark', 'warm-blush');
-    if (theme !== 'light') root.classList.add(theme);
-    return () => {
-      root.classList.remove('dark', 'warm-blush');
-    };
-  }, [theme]);
-
-  const cycleTheme = () => {
-    const idx = themeOrder.indexOf(theme);
-    setTheme(themeOrder[(idx + 1) % themeOrder.length]);
-  };
 
   useEffect(() => {
     if (!id) return;
@@ -77,7 +59,6 @@ const Reader = () => {
         if (visible.length > 0) {
           const minIdx = Math.min(...visible);
           updateReadingPosition(book.id, minIdx);
-          // Auto mark as "read" when reaching the end
           if (minIdx >= book.totalParagraphs - 3 && book.readingStatus !== 'read') {
             const updated = getBook(book.id);
             if (updated) {

@@ -1,5 +1,5 @@
 import { Book, ReadingStatus } from '@/types/book';
-import { MoreVertical, BookOpen, BookMarked, BookCheck } from 'lucide-react';
+import { MoreVertical, BookOpen, BookMarked, BookCheck, Pin } from 'lucide-react';
 import { useState } from 'react';
 
 interface BookCardProps {
@@ -8,6 +8,8 @@ interface BookCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onStatusChange?: (status: ReadingStatus) => void;
+  onTogglePin?: () => void;
+  canPin?: boolean;
 }
 
 const statusLabels: Record<ReadingStatus, { label: string; icon: React.ReactNode }> = {
@@ -16,7 +18,7 @@ const statusLabels: Record<ReadingStatus, { label: string; icon: React.ReactNode
   'read': { label: 'Read', icon: <BookCheck className="h-3.5 w-3.5" /> },
 };
 
-const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange }: BookCardProps) => {
+const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange, onTogglePin, canPin }: BookCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const progress = book.totalParagraphs > 0
     ? Math.round((book.lastReadParagraph / book.totalParagraphs) * 100)
@@ -40,6 +42,11 @@ const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange }: BookCardPr
             </span>
           </div>
         )}
+        {book.pinned && (
+          <div className="absolute top-1.5 left-1.5 rounded-full bg-primary/90 p-1">
+            <Pin className="h-3 w-3 text-primary-foreground" />
+          </div>
+        )}
         {progress > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/50">
             <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
@@ -50,7 +57,6 @@ const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange }: BookCardPr
       <div className="mt-2 px-0.5">
         <h3 className="text-sm font-medium text-foreground line-clamp-1">{book.title}</h3>
         <p className="text-xs text-muted-foreground line-clamp-1">{book.author}</p>
-        {/* Status badge */}
         <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
           {statusLabels[status].icon}
           {statusLabels[status].label}
@@ -71,6 +77,16 @@ const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange }: BookCardPr
               <button onClick={() => { onEdit(); setShowMenu(false); }} className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-secondary">
                 Edit details
               </button>
+              {onTogglePin && (
+                <button
+                  onClick={() => { onTogglePin(); setShowMenu(false); }}
+                  disabled={!book.pinned && !canPin}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-secondary flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed text-foreground"
+                >
+                  <Pin className="h-3.5 w-3.5" />
+                  {book.pinned ? 'Unpin' : 'Pin to top'}
+                </button>
+              )}
               <div className="mx-2 my-1 h-px bg-border" />
               {(Object.keys(statusLabels) as ReadingStatus[]).map(s => (
                 <button
