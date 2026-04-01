@@ -5,6 +5,8 @@ import { Book, Highlight, Bookmark as BookmarkType, ReaderTheme } from '@/types/
 import { getBook, updateReadingPosition, addHighlight, removeHighlight, addBookmark, removeBookmark, saveBook } from '@/lib/bookStorage';
 import { lookupWord, DictionaryResult } from '@/lib/dictionary';
 import { useTheme } from '@/hooks/useTheme';
+import { logPagesRead, getTodayPages, getReadingGoal } from '@/lib/readingLog';
+import { toast } from 'sonner';
 import HighlightToolbar from '@/components/HighlightToolbar';
 import DictionaryPopup from '@/components/DictionaryPopup';
 import BookmarkPanel from '@/components/BookmarkPanel';
