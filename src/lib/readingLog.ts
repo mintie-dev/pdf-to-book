@@ -76,7 +76,29 @@ export function getCurrentStreak(): number {
   return streak;
 }
 
+export function getRecordPages(): number {
+  const log = getReadingLog();
+  if (log.length === 0) return 0;
+  return Math.max(...log.map(e => e.pagesRead));
+}
+
 export function getContributionData(weeks: number = 12): { date: string; pagesRead: number; goalMet: boolean }[] {
+  const log = getReadingLog();
+  const goal = getReadingGoal();
+  const days = weeks * 7;
+  const result: { date: string; pagesRead: number; goalMet: boolean }[] = [];
+  const now = new Date();
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const entry = log.find(e => e.date === dateStr);
+    const pagesRead = entry?.pagesRead || 0;
+    result.push({ date: dateStr, pagesRead, goalMet: pagesRead >= goal.pagesPerDay });
+  }
+  return result;
+}
   const log = getReadingLog();
   const goal = getReadingGoal();
   const days = weeks * 7;
