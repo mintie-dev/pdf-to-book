@@ -161,20 +161,14 @@ const Library = () => {
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-lg transition-colors duration-300">
         <div className="mx-auto max-w-4xl px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => setViewMode('library')}
+            onClick={() => setMenuOpen(true)}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity active:scale-95"
           >
+            <Menu className="h-5 w-5 text-muted-foreground" />
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
           </button>
           <div className="flex items-center gap-2">
-            <button
-              onClick={cycleTheme}
-              className="rounded-full p-2 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105"
-              title={`Theme: ${theme}`}
-            >
-              {themeIcons[theme]}
-            </button>
             <button
               onClick={() => setViewMode(viewMode === 'discover' ? 'library' : 'discover')}
               className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'discover' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}
@@ -276,28 +270,18 @@ const Library = () => {
         )}
       </main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button - Circle */}
       <div className="fixed bottom-6 right-6 z-20">
         <button
-          onClick={() => {
-            if (fabExpanded) {
-              fileInputRef.current?.click();
-            }
-            setFabExpanded(!fabExpanded);
-          }}
-          onMouseEnter={() => setFabExpanded(true)}
-          onMouseLeave={() => setFabExpanded(false)}
+          onClick={() => fileInputRef.current?.click()}
           disabled={loading}
-          className={`flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 ${
-            fabExpanded ? 'px-5 py-3.5' : 'p-3.5'
-          }`}
+          className="flex items-center justify-center h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 active:scale-95 disabled:opacity-50"
         >
-          <Plus className={`h-5 w-5 transition-transform duration-300 ${fabExpanded ? 'rotate-0' : 'rotate-0'}`} />
-          <span className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${fabExpanded ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
-            {loading ? 'Processing...' : 'Add PDF'}
-          </span>
+          <Plus className="h-6 w-6" />
         </button>
       </div>
+
+      <LibraryMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {editBook && (
         <EditBookDialog book={editBook} onClose={() => setEditBook(null)} onSave={handleEditSave} />
