@@ -9,6 +9,8 @@ import EditBookDialog from '@/components/EditBookDialog';
 import BookDiscovery from '@/components/BookDiscovery';
 import GoodreadsImport from '@/components/GoodreadsImport';
 import LibraryMenu from '@/components/LibraryMenu';
+import { useTheme } from '@/hooks/useTheme';
+import { ReaderTheme } from '@/types/book';
 import { toast } from 'sonner';
 
 const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
