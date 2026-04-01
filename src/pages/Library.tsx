@@ -1,14 +1,14 @@
 import { useState, useRef } from 'react';
-import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Sun, Moon, Flower2 } from 'lucide-react';
-import { Book, ReadingStatus, ReaderTheme } from '@/types/book';
+import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Menu } from 'lucide-react';
+import { Book, ReadingStatus } from '@/types/book';
 import { getAllBooks, saveBook, deleteBook } from '@/lib/bookStorage';
 import { extractTextFromPdf } from '@/lib/pdfParser';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/hooks/useTheme';
 import BookCard from '@/components/BookCard';
 import EditBookDialog from '@/components/EditBookDialog';
 import BookDiscovery from '@/components/BookDiscovery';
 import GoodreadsImport from '@/components/GoodreadsImport';
+import LibraryMenu from '@/components/LibraryMenu';
 import { toast } from 'sonner';
 
 const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
