@@ -276,14 +276,17 @@ const Library = () => {
         )}
       </main>
 
-      {/* Floating Action Button - Circle */}
-      <div className="fixed bottom-6 right-6 z-20">
+      {/* Floating Action Button - Circle, expands on hover */}
+      <div className="fixed bottom-6 right-6 z-20 group">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
-          className="flex items-center justify-center h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center h-14 min-w-14 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 gap-2 px-4 group-hover:pr-5"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-6 w-6 shrink-0" />
+          <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-300 group-hover:max-w-[100px]">
+            Add PDF
+          </span>
         </button>
       </div>
 
