@@ -17,12 +17,19 @@ export interface Bookmark {
 
 export type ReadingStatus = 'want-to-read' | 'reading' | 'read';
 
+export type ReaderTheme = 'light' | 'dark' | 'warm-blush';
+
+export interface ParagraphFormat {
+  format?: 'centered' | 'large' | 'medium' | 'spacer';
+}
+
 export interface Book {
   id: string;
   title: string;
   author: string;
   coverUrl: string | null;
   content: string[];  // paragraphs
+  paragraphFormats?: ParagraphFormat[];
   highlights: Highlight[];
   bookmarks: Bookmark[];
   lastReadParagraph: number;
