@@ -21,6 +21,7 @@ const ReadingLog = () => {
   const todayGoalMet = todayPages >= goal.pagesPerDay;
   const contributions = getContributionData(12);
   const record = getRecordPages();
+  const totalPages12w = getTotalPages12Weeks();
 
   const handleSaveGoal = () => {
     const newGoal = { pagesPerDay: sliderVal };
