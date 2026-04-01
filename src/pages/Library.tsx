@@ -18,12 +18,6 @@ const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }
   { key: 'read', label: 'Read', icon: <BookCheck className="h-4 w-4" /> },
 ];
 
-const themeIcons: Record<ReaderTheme, React.ReactNode> = {
-  light: <Sun className="h-4 w-4" />,
-  dark: <Moon className="h-4 w-4" />,
-  'warm-blush': <Flower2 className="h-4 w-4" />,
-};
-
 type ViewMode = 'library' | 'discover' | 'import';
 
 const Library = () => {
