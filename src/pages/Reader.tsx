@@ -260,13 +260,10 @@ const Reader = () => {
 
   if (!book) return null;
 
-  // Determine theme class for container
-  const themeClass = theme === 'dark' ? 'dark' : theme === 'warm-blush' ? 'warm-blush' : '';
-
   return (
-    <div className={`min-h-screen flex flex-col ${themeClass}`} style={{ backgroundColor: 'hsl(var(--reader-bg))', color: 'hsl(var(--reader-foreground))' }}>
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       {showToolbar && (
-        <header className="sticky top-0 z-20 border-b transition-all" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--card) / 0.9)', backdropFilter: 'blur(12px)' }}>
+        <header className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur-lg transition-colors duration-300">
           <div className="flex items-center justify-between px-4 py-3">
             <button onClick={() => navigate('/')} className="rounded-full p-2 hover:opacity-70 active:scale-95">
               <ArrowLeft className="h-5 w-5" />
