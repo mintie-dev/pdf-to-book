@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Menu } from 'lucide-react';
+import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Menu, Sun, Moon, Flower2 } from 'lucide-react';
 import { Book, ReadingStatus } from '@/types/book';
 import { getAllBooks, saveBook, deleteBook } from '@/lib/bookStorage';
 import { extractTextFromPdf } from '@/lib/pdfParser';
@@ -9,7 +9,15 @@ import EditBookDialog from '@/components/EditBookDialog';
 import BookDiscovery from '@/components/BookDiscovery';
 import GoodreadsImport from '@/components/GoodreadsImport';
 import LibraryMenu from '@/components/LibraryMenu';
+import { useTheme } from '@/hooks/useTheme';
+import { ReaderTheme } from '@/types/book';
 import { toast } from 'sonner';
+
+const themeOptions: { key: ReaderTheme; label: string; icon: React.ReactNode }[] = [
+  { key: 'light', label: 'Light', icon: <Sun className="h-3.5 w-3.5" /> },
+  { key: 'dark', label: 'Dark', icon: <Moon className="h-3.5 w-3.5" /> },
+  { key: 'warm-blush', label: 'Blush', icon: <Flower2 className="h-3.5 w-3.5" /> },
+];
 
 const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'All', icon: <LibraryIcon className="h-4 w-4" /> },
@@ -27,6 +35,7 @@ const Library = () => {
   const [activeTab, setActiveTab] = useState<ReadingStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('library');
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -167,7 +176,24 @@ const Library = () => {
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Theme toggle */}
+            <div className="flex items-center gap-0.5 mr-1">
+              {themeOptions.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setTheme(opt.key)}
+                  className={`rounded-full p-1.5 transition-all duration-200 ${
+                    theme === opt.key
+                      ? 'bg-primary text-primary-foreground scale-110'
+                      : 'hover:bg-secondary text-muted-foreground hover:scale-105'
+                  }`}
+                  title={opt.label}
+                >
+                  {opt.icon}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setViewMode(viewMode === 'discover' ? 'library' : 'discover')}
               className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'discover' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}
@@ -276,14 +302,17 @@ const Library = () => {
         )}
       </main>
 
-      {/* Floating Action Button - Circle */}
-      <div className="fixed bottom-6 right-6 z-20">
+      {/* Floating Action Button - Circle, expands on hover */}
+      <div className="fixed bottom-6 right-6 z-20 group">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
-          className="flex items-center justify-center h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center h-14 min-w-14 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 disabled:opacity-50 gap-2 px-4 group-hover:pr-5"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-6 w-6 shrink-0" />
+          <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm font-medium transition-all duration-300 group-hover:max-w-[100px]">
+            Add PDF
+          </span>
         </button>
       </div>
 
