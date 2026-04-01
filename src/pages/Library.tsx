@@ -13,6 +13,12 @@ import { useTheme } from '@/hooks/useTheme';
 import { ReaderTheme } from '@/types/book';
 import { toast } from 'sonner';
 
+const themeOptions: { key: ReaderTheme; label: string; icon: React.ReactNode }[] = [
+  { key: 'light', label: 'Light', icon: <Sun className="h-3.5 w-3.5" /> },
+  { key: 'dark', label: 'Dark', icon: <Moon className="h-3.5 w-3.5" /> },
+  { key: 'warm-blush', label: 'Blush', icon: <Flower2 className="h-3.5 w-3.5" /> },
+];
+
 const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'All', icon: <LibraryIcon className="h-4 w-4" /> },
   { key: 'want-to-read', label: 'Want to Read', icon: <BookMarked className="h-4 w-4" /> },
