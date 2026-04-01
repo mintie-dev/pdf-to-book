@@ -28,7 +28,7 @@ const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange }: BookCardPr
     <div className="group relative flex flex-col">
       <button
         onClick={onRead}
-        className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-secondary shadow-md transition-all hover:shadow-xl active:scale-[0.98]"
+        className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-secondary shadow-md transition-all duration-200 hover:shadow-xl hover:scale-[1.03] active:scale-[0.98]"
       >
         {book.coverUrl ? (
           <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover" />

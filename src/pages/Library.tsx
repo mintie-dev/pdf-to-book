@@ -8,7 +8,7 @@ import BookCard from '@/components/BookCard';
 import EditBookDialog from '@/components/EditBookDialog';
 import BookDiscovery from '@/components/BookDiscovery';
 import GoodreadsImport from '@/components/GoodreadsImport';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'All', icon: <LibraryIcon className="h-4 w-4" /> },
@@ -27,13 +27,12 @@ const Library = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('library');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== 'application/pdf') {
-      toast({ title: 'Invalid file', description: 'Please upload a PDF file', variant: 'destructive' });
+      toast.error('Please upload a PDF file');
       return;
     }
     setLoading(true);
@@ -56,9 +55,9 @@ const Library = () => {
       };
       saveBook(book);
       setBooks(getAllBooks());
-      toast({ title: 'Book added!', description: `"${title}" has been added to your library` });
+      toast.success(`"${title}" added to your library`, { duration: 3000 });
     } catch {
-      toast({ title: 'Error', description: 'Failed to process PDF file', variant: 'destructive' });
+      toast.error('Failed to process PDF file');
     } finally {
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -68,7 +67,7 @@ const Library = () => {
   const handleDelete = (id: string) => {
     deleteBook(id);
     setBooks(getAllBooks());
-    toast({ title: 'Book removed' });
+    toast('Book removed', { duration: 3000 });
   };
 
   const handleEditSave = () => {
@@ -102,13 +101,12 @@ const Library = () => {
     };
     saveBook(book);
     setBooks(getAllBooks());
-    toast({ title: 'Book added!', description: `"${title}" added to your library` });
+    toast.success(`"${title}" added to your library`, { duration: 3000 });
   };
 
   const handleGoodreadsImport = (entries: { title: string; author: string; readingStatus: ReadingStatus }[]) => {
     let added = 0;
     for (const entry of entries) {
-      // Skip duplicates
       if (books.some(b => b.title.toLowerCase() === entry.title.toLowerCase())) continue;
       const book: Book = {
         id: crypto.randomUUID(),
@@ -128,7 +126,7 @@ const Library = () => {
       added++;
     }
     setBooks(getAllBooks());
-    toast({ title: 'Import complete!', description: `${added} books imported (${entries.length - added} duplicates skipped)` });
+    toast.success(`${added} books imported (${entries.length - added} duplicates skipped)`, { duration: 3000 });
     setViewMode('library');
   };
 
@@ -142,21 +140,24 @@ const Library = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-lg">
         <div className="mx-auto max-w-4xl px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('library')}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity active:scale-95"
+          >
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode(viewMode === 'discover' ? 'library' : 'discover')}
-              className={`rounded-full p-2 transition-colors ${viewMode === 'discover' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-muted-foreground'}`}
+              className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'discover' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}
               title="Discover books"
             >
               <Search className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode(viewMode === 'import' ? 'library' : 'import')}
-              className={`rounded-full p-2 transition-colors ${viewMode === 'import' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary text-muted-foreground'}`}
+              className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'import' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}
               title="Import from Goodreads"
             >
               <Upload className="h-4 w-4" />
@@ -164,7 +165,7 @@ const Library = () => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
-              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               {loading ? 'Processing...' : 'Add PDF'}
@@ -178,10 +179,10 @@ const Library = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                   activeTab === tab.key
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground scale-105'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground hover:scale-105'
                 }`}
               >
                 {tab.icon}
@@ -194,7 +195,7 @@ const Library = () => {
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         {viewMode === 'discover' && (
-          <div className="mb-6">
+          <div className="mb-6 animate-[fade-in_0.3s_ease-out]">
             <h2 className="text-lg font-semibold text-foreground mb-3">Discover Books</h2>
             <p className="text-sm text-muted-foreground mb-4">Search Open Library for free public domain books and add them to your library.</p>
             <BookDiscovery onImportBook={handleImportFromOpenLibrary} />
@@ -202,7 +203,7 @@ const Library = () => {
         )}
 
         {viewMode === 'import' && (
-          <div className="mb-6">
+          <div className="mb-6 animate-[fade-in_0.3s_ease-out]">
             <h2 className="text-lg font-semibold text-foreground mb-3">Import from Goodreads</h2>
             <p className="text-sm text-muted-foreground mb-4">Export your Goodreads library as CSV and import book metadata & reading status.</p>
             <GoodreadsImport onImport={handleGoodreadsImport} />
@@ -212,7 +213,7 @@ const Library = () => {
         {viewMode === 'library' && (
           <>
             {sortedBooks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="flex flex-col items-center justify-center py-24 text-center animate-[fade-in_0.4s_ease-out]">
                 <div className="mb-4 rounded-full bg-secondary p-6">
                   <BookOpen className="h-12 w-12 text-muted-foreground" />
                 </div>
@@ -224,22 +225,27 @@ const Library = () => {
                 </p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-md"
+                  className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-md transition-all hover:shadow-lg hover:scale-105 active:scale-95"
                 >
                   Upload your first book
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {sortedBooks.map(book => (
-                  <BookCard
+                {sortedBooks.map((book, i) => (
+                  <div
                     key={book.id}
-                    book={book}
-                    onRead={() => navigate(`/read/${book.id}`)}
-                    onEdit={() => setEditBook(book)}
-                    onDelete={() => handleDelete(book.id)}
-                    onStatusChange={(status) => handleStatusChange(book.id, status)}
-                  />
+                    className="animate-[fade-in_0.3s_ease-out]"
+                    style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
+                  >
+                    <BookCard
+                      book={book}
+                      onRead={() => navigate(`/read/${book.id}`)}
+                      onEdit={() => setEditBook(book)}
+                      onDelete={() => handleDelete(book.id)}
+                      onStatusChange={(status) => handleStatusChange(book.id, status)}
+                    />
+                  </div>
                 ))}
               </div>
             )}

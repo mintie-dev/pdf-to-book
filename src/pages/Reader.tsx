@@ -37,9 +37,15 @@ const Reader = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const visibleParagraphs = useRef<Set<number>>(new Set());
 
-  // Apply theme class to reader container
+  // Apply theme class to document root so CSS variables cascade everywhere
   useEffect(() => {
     localStorage.setItem('reader-theme', theme);
+    const root = document.documentElement;
+    root.classList.remove('dark', 'warm-blush');
+    if (theme !== 'light') root.classList.add(theme);
+    return () => {
+      root.classList.remove('dark', 'warm-blush');
+    };
   }, [theme]);
 
   const cycleTheme = () => {
@@ -254,13 +260,10 @@ const Reader = () => {
 
   if (!book) return null;
 
-  // Determine theme class for container
-  const themeClass = theme === 'dark' ? 'dark' : theme === 'warm-blush' ? 'warm-blush' : '';
-
   return (
-    <div className={`min-h-screen flex flex-col ${themeClass}`} style={{ backgroundColor: 'hsl(var(--reader-bg))', color: 'hsl(var(--reader-foreground))' }}>
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       {showToolbar && (
-        <header className="sticky top-0 z-20 border-b transition-all" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--card) / 0.9)', backdropFilter: 'blur(12px)' }}>
+        <header className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur-lg transition-colors duration-300">
           <div className="flex items-center justify-between px-4 py-3">
             <button onClick={() => navigate('/')} className="rounded-full p-2 hover:opacity-70 active:scale-95">
               <ArrowLeft className="h-5 w-5" />
@@ -277,7 +280,7 @@ const Reader = () => {
               </button>
               <button onClick={handleToggleBookmark} className="rounded-full p-2 hover:opacity-70">
                 {isCurrentBookmarked() ? (
-                  <BookmarkCheck className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
+                  <BookmarkCheck className="h-5 w-5 text-primary" />
                 ) : (
                   <Bookmark className="h-5 w-5 opacity-60" />
                 )}
@@ -287,8 +290,8 @@ const Reader = () => {
               </button>
             </div>
           </div>
-          <div className="h-0.5" style={{ backgroundColor: 'hsl(var(--muted))' }}>
-            <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--primary))' }} />
+          <div className="h-0.5 bg-muted">
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </header>
       )}
@@ -322,7 +325,7 @@ const Reader = () => {
       </main>
 
       {showToolbar && (
-        <div className="sticky bottom-0 border-t" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--card) / 0.9)', backdropFilter: 'blur(12px)' }}>
+        <div className="sticky bottom-0 border-t border-border bg-card/90 backdrop-blur-lg transition-colors duration-300">
           <div className="flex items-center justify-center gap-4 px-4 py-3">
             <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.max(12, s - 2)); }} className="rounded-full p-2 hover:opacity-70">
               <Minus className="h-4 w-4 opacity-60" />
