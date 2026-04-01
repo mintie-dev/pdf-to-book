@@ -26,10 +26,9 @@ const Library = () => {
   const [editBook, setEditBook] = useState<Book | null>(null);
   const [activeTab, setActiveTab] = useState<ReadingStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('library');
-  const [fabExpanded, setFabExpanded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { theme, cycleTheme } = useTheme();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
