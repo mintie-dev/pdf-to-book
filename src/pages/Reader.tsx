@@ -280,7 +280,7 @@ const Reader = () => {
               </button>
               <button onClick={handleToggleBookmark} className="rounded-full p-2 hover:opacity-70">
                 {isCurrentBookmarked() ? (
-                  <BookmarkCheck className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
+                  <BookmarkCheck className="h-5 w-5 text-primary" />
                 ) : (
                   <Bookmark className="h-5 w-5 opacity-60" />
                 )}
