@@ -176,7 +176,24 @@ const Library = () => {
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Theme toggle */}
+            <div className="flex items-center gap-0.5 mr-1">
+              {themeOptions.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setTheme(opt.key)}
+                  className={`rounded-full p-1.5 transition-all duration-200 ${
+                    theme === opt.key
+                      ? 'bg-primary text-primary-foreground scale-110'
+                      : 'hover:bg-secondary text-muted-foreground hover:scale-105'
+                  }`}
+                  title={opt.label}
+                >
+                  {opt.icon}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setViewMode(viewMode === 'discover' ? 'library' : 'discover')}
               className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'discover' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}
