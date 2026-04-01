@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Menu } from 'lucide-react';
+import { Plus, BookOpen, BookMarked, BookCheck, Library as LibraryIcon, Search, Upload, Menu, Sun, Moon, Flower2 } from 'lucide-react';
 import { Book, ReadingStatus } from '@/types/book';
 import { getAllBooks, saveBook, deleteBook } from '@/lib/bookStorage';
 import { extractTextFromPdf } from '@/lib/pdfParser';
