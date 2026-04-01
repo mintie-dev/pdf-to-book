@@ -177,23 +177,18 @@ const Library = () => {
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
           </button>
           <div className="flex items-center gap-1.5">
-            {/* Theme toggle */}
-            <div className="flex items-center gap-0.5 mr-1">
-              {themeOptions.map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setTheme(opt.key)}
-                  className={`rounded-full p-1.5 transition-all duration-200 ${
-                    theme === opt.key
-                      ? 'bg-primary text-primary-foreground scale-110'
-                      : 'hover:bg-secondary text-muted-foreground hover:scale-105'
-                  }`}
-                  title={opt.label}
-                >
-                  {opt.icon}
-                </button>
-              ))}
-            </div>
+            {/* Single theme cycle button */}
+            <button
+              onClick={() => {
+                const order: ReaderTheme[] = ['light', 'dark', 'warm-blush'];
+                const next = order[(order.indexOf(theme) + 1) % order.length];
+                setTheme(next);
+              }}
+              className="rounded-full p-2 hover:bg-secondary text-muted-foreground hover:scale-105 transition-all duration-200"
+              title={`Theme: ${theme}`}
+            >
+              {theme === 'light' ? <Sun className="h-4 w-4" /> : theme === 'dark' ? <Moon className="h-4 w-4" /> : <Flower2 className="h-4 w-4" />}
+            </button>
             <button
               onClick={() => setViewMode(viewMode === 'discover' ? 'library' : 'discover')}
               className={`rounded-full p-2 transition-all duration-200 ${viewMode === 'discover' ? 'bg-primary text-primary-foreground scale-110' : 'hover:bg-secondary text-muted-foreground hover:scale-105'}`}

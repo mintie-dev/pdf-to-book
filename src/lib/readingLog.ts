@@ -81,6 +81,15 @@ export function getRecordPages(): number {
   return Math.max(...log.map(e => e.pagesRead));
 }
 
+export function getTotalPages12Weeks(): number {
+  const log = getReadingLog();
+  const now = new Date();
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - 84);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  return log.filter(e => e.date >= cutoffStr).reduce((sum, e) => sum + e.pagesRead, 0);
+}
+
 export function getContributionData(weeks: number = 12): { date: string; pagesRead: number; goalMet: boolean }[] {
   const log = getReadingLog();
   const goal = getReadingGoal();

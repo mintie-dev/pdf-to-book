@@ -8,6 +8,7 @@ import {
   setReadingGoal,
   getTodayPages,
   getRecordPages,
+  getTotalPages12Weeks,
 } from '@/lib/readingLog';
 
 const ReadingLog = () => {
