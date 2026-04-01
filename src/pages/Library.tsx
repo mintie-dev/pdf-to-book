@@ -161,10 +161,9 @@ const Library = () => {
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-lg transition-colors duration-300">
         <div className="mx-auto max-w-4xl px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => setMenuOpen(true)}
+            onClick={() => setViewMode('library')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity active:scale-95"
           >
-            <Menu className="h-5 w-5 text-muted-foreground" />
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold text-foreground">My Library</h1>
           </button>
@@ -182,6 +181,13 @@ const Library = () => {
               title="Import from Goodreads"
             >
               <Upload className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="rounded-full p-2 hover:bg-secondary text-muted-foreground hover:scale-105 transition-all duration-200"
+              title="Menu"
+            >
+              <Menu className="h-4 w-4" />
             </button>
           </div>
           <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileUpload} />
