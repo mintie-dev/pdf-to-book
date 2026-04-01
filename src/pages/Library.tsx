@@ -29,6 +29,7 @@ const Library = () => {
   const [activeTab, setActiveTab] = useState<ReadingStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('library');
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
