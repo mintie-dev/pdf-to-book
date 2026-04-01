@@ -8,7 +8,7 @@ import BookCard from '@/components/BookCard';
 import EditBookDialog from '@/components/EditBookDialog';
 import BookDiscovery from '@/components/BookDiscovery';
 import GoodreadsImport from '@/components/GoodreadsImport';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const tabs: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'All', icon: <LibraryIcon className="h-4 w-4" /> },
