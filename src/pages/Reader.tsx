@@ -290,8 +290,8 @@ const Reader = () => {
               </button>
             </div>
           </div>
-          <div className="h-0.5" style={{ backgroundColor: 'hsl(var(--muted))' }}>
-            <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, backgroundColor: 'hsl(var(--primary))' }} />
+          <div className="h-0.5 bg-muted">
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </header>
       )}
