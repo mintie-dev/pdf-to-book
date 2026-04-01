@@ -325,7 +325,7 @@ const Reader = () => {
       </main>
 
       {showToolbar && (
-        <div className="sticky bottom-0 border-t" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--card) / 0.9)', backdropFilter: 'blur(12px)' }}>
+        <div className="sticky bottom-0 border-t border-border bg-card/90 backdrop-blur-lg transition-colors duration-300">
           <div className="flex items-center justify-center gap-4 px-4 py-3">
             <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.max(12, s - 2)); }} className="rounded-full p-2 hover:opacity-70">
               <Minus className="h-4 w-4 opacity-60" />
