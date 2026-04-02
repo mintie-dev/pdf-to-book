@@ -7,7 +7,7 @@ export interface ParsedParagraph {
   format?: 'centered' | 'large' | 'medium' | 'spacer';
 }
 
-export async function extractTextFromPdf(file: File): Promise<{ title: string; paragraphs: string[]; formattedParagraphs: ParsedParagraph[] }> {
+export async function extractTextFromPdf(file: File): Promise<{ title: string; paragraphs: string[]; formattedParagraphs: ParsedParagraph[]; pageCount: number }> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
@@ -108,5 +108,5 @@ export async function extractTextFromPdf(file: File): Promise<{ title: string; p
   const title = file.name.replace(/\.pdf$/i, '').replace(/[_-]/g, ' ');
   const paragraphs = formattedParagraphs.map(p => p.text);
 
-  return { title, paragraphs, formattedParagraphs };
+  return { title, paragraphs, formattedParagraphs, pageCount: totalPages };
 }

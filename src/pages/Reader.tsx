@@ -55,6 +55,11 @@ const Reader = () => {
     maxReadParagraph.current = book.lastReadParagraph || 0;
     goalNotified.current = false;
     
+    // Calculate paragraphs-per-page ratio for accurate page counting
+    const paragraphsPerPage = book.totalPages && book.totalPages > 0
+      ? book.totalParagraphs / book.totalPages
+      : 1;
+    
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
@@ -67,9 +72,10 @@ const Reader = () => {
           const maxVisible = Math.max(...visible);
           const minIdx = Math.min(...visible);
           
-          // Log new pages read
+          // Log new pages read using actual page ratio
           if (maxVisible > maxReadParagraph.current) {
-            const newPages = maxVisible - maxReadParagraph.current;
+            const newParagraphs = maxVisible - maxReadParagraph.current;
+            const newPages = Math.max(1, Math.round(newParagraphs / paragraphsPerPage));
             logPagesRead(newPages);
             maxReadParagraph.current = maxVisible;
             
@@ -209,6 +215,7 @@ const Reader = () => {
   };
 
   const progress = book ? Math.round((book.lastReadParagraph / Math.max(book.totalParagraphs, 1)) * 100) : 0;
+  const currentPage = book && book.totalPages ? Math.min(book.totalPages, Math.round((book.lastReadParagraph / Math.max(book.totalParagraphs, 1)) * book.totalPages) + 1) : null;
 
   const renderParagraph = (text: string, idx: number) => {
     if (!book) return text;
@@ -347,7 +354,9 @@ const Reader = () => {
             <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.min(32, s + 2)); }} className="rounded-full p-2 hover:opacity-70">
               <Plus className="h-4 w-4 opacity-60" />
             </button>
-            <span className="text-xs opacity-60 ml-4">{progress}%</span>
+            <span className="text-xs opacity-60 ml-4">
+              {currentPage && book?.totalPages ? `${currentPage}/${book.totalPages}` : `${progress}%`}
+            </span>
           </div>
         </div>
       )}

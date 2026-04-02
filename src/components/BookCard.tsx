@@ -41,9 +41,10 @@ const BookCard = ({ book, onRead, onEdit, onDelete, onStatusChange, onTogglePin,
     }
     setUploading(true);
     try {
-      const { paragraphs, formattedParagraphs } = await extractTextFromPdf(file);
+      const { paragraphs, formattedParagraphs, pageCount } = await extractTextFromPdf(file);
       book.content = paragraphs;
       book.totalParagraphs = paragraphs.length;
+      book.totalPages = pageCount;
       book.paragraphFormats = formattedParagraphs.map(p => ({ format: p.format }));
       saveBook(book);
       onBookUpdated?.();

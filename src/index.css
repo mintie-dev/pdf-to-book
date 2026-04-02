@@ -82,35 +82,35 @@
     --sidebar-ring: 215 70% 60%;
   }
 
-  /* Warm Blush theme - darker charcoal with pink text */
+  /* Warm Blush theme — charcoal + neon pink accents, light pink text */
   .warm-blush {
-    --background: 240 10% 8%;
-    --foreground: 330 100% 72%;
-    --card: 240 10% 10%;
-    --card-foreground: 330 100% 72%;
-    --popover: 240 10% 10%;
-    --popover-foreground: 330 100% 72%;
-    --primary: 330 100% 65%;
-    --primary-foreground: 240 10% 8%;
-    --secondary: 240 8% 15%;
-    --secondary-foreground: 330 90% 72%;
-    --muted: 240 8% 15%;
-    --muted-foreground: 330 40% 50%;
-    --accent: 330 100% 65%;
-    --accent-foreground: 240 10% 8%;
+    --background: 220 15% 10%;
+    --foreground: 330 100% 88%;
+    --card: 220 14% 13%;
+    --card-foreground: 330 100% 88%;
+    --popover: 220 14% 14%;
+    --popover-foreground: 330 100% 88%;
+    --primary: 330 100% 64%;
+    --primary-foreground: 220 15% 8%;
+    --secondary: 220 12% 17%;
+    --secondary-foreground: 330 60% 80%;
+    --muted: 220 12% 15%;
+    --muted-foreground: 330 20% 55%;
+    --accent: 330 80% 55%;
+    --accent-foreground: 220 15% 8%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 330 100% 72%;
-    --border: 240 8% 16%;
-    --input: 240 8% 16%;
-    --ring: 330 100% 65%;
+    --destructive-foreground: 330 100% 88%;
+    --border: 220 12% 20%;
+    --input: 220 12% 20%;
+    --ring: 330 100% 64%;
 
     --highlight-yellow: 48 70% 30%;
     --highlight-blue: 210 50% 30%;
     --highlight-pink: 330 80% 35%;
     --highlight-green: 140 40% 28%;
 
-    --reader-bg: 240 10% 8%;
-    --reader-foreground: 330 90% 72%;
+    --reader-bg: 220 15% 10%;
+    --reader-foreground: 330 100% 88%;
   }
 }
 

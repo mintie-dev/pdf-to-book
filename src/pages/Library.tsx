@@ -48,7 +48,7 @@ const Library = () => {
     }
     setLoading(true);
     try {
-      const { title, paragraphs, formattedParagraphs } = await extractTextFromPdf(file);
+      const { title, paragraphs, formattedParagraphs, pageCount } = await extractTextFromPdf(file);
       const book: Book = {
         id: crypto.randomUUID(),
         title,
@@ -62,6 +62,7 @@ const Library = () => {
         lastReadAt: Date.now(),
         addedAt: Date.now(),
         totalParagraphs: paragraphs.length,
+        totalPages: pageCount,
         readingStatus: 'want-to-read',
       };
       saveBook(book);
