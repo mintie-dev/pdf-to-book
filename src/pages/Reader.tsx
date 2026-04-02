@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bookmark, BookmarkCheck, List, Type, Minus, Plus, Search, Sun, Moon, Flower2 } from 'lucide-react';
+import { ArrowLeft, Bookmark, BookmarkCheck, List, Type, Minus, Plus, Search, Sun, Moon, Flower2, AlignLeft, AlignJustify } from 'lucide-react';
 import { Book, Highlight, Bookmark as BookmarkType, ReaderTheme } from '@/types/book';
 import { getBook, updateReadingPosition, addHighlight, removeHighlight, addBookmark, removeBookmark, saveBook } from '@/lib/bookStorage';
 import { lookupWord, DictionaryResult } from '@/lib/dictionary';
@@ -18,11 +18,19 @@ const themeIcons: Record<ReaderTheme, React.ReactNode> = {
   'warm-blush': <Flower2 className="h-5 w-5" />,
 };
 
+const fontFamilies = [
+  { key: 'sans', label: 'Sans', style: 'ui-sans-serif, system-ui, sans-serif' },
+  { key: 'serif', label: 'Serif', style: 'Georgia, Cambria, "Times New Roman", serif' },
+  { key: 'mono', label: 'Mono', style: 'ui-monospace, "Courier New", monospace' },
+];
+
 const Reader = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [book, setBook] = useState<Book | null>(null);
   const [fontSize, setFontSize] = useState(18);
+  const [fontFamily, setFontFamily] = useState('sans');
+  const [textAlign, setTextAlign] = useState<'left' | 'justify'>('left');
   const [showToolbar, setShowToolbar] = useState(true);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -55,7 +63,6 @@ const Reader = () => {
     maxReadParagraph.current = book.lastReadParagraph || 0;
     goalNotified.current = false;
     
-    // Calculate paragraphs-per-page ratio for accurate page counting
     const paragraphsPerPage = book.totalPages && book.totalPages > 0
       ? book.totalParagraphs / book.totalPages
       : 1;
@@ -72,14 +79,12 @@ const Reader = () => {
           const maxVisible = Math.max(...visible);
           const minIdx = Math.min(...visible);
           
-          // Log new pages read using actual page ratio
           if (maxVisible > maxReadParagraph.current) {
             const newParagraphs = maxVisible - maxReadParagraph.current;
             const newPages = Math.max(1, Math.round(newParagraphs / paragraphsPerPage));
             logPagesRead(newPages);
             maxReadParagraph.current = maxVisible;
             
-            // Check daily goal completion
             if (!goalNotified.current) {
               const goal = getReadingGoal();
               const todayTotal = getTodayPages();
@@ -90,7 +95,6 @@ const Reader = () => {
             }
           }
           
-          // Update reading position in real-time
           updateReadingPosition(book.id, minIdx);
           setBook(prev => prev ? { ...prev, lastReadParagraph: minIdx } : null);
           
@@ -129,22 +133,27 @@ const Reader = () => {
     const text = selection.toString().trim();
     setSelectedText(text);
 
+    const range = selection.getRangeAt(0);
     const anchorNode = selection.anchorNode;
     const paragraphEl = anchorNode?.parentElement?.closest('[data-idx]');
     if (paragraphEl) {
       const paragraphIndex = parseInt(paragraphEl.getAttribute('data-idx') || '0');
-      const paragraphText = paragraphEl.textContent || '';
-      const startOffset = paragraphText.indexOf(text);
-      const endOffset = startOffset >= 0 ? startOffset + text.length : 0;
+      
+      // Use a temporary range to calculate the true offset within the paragraph
+      const preRange = document.createRange();
+      preRange.selectNodeContents(paragraphEl);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      const startOffset = preRange.toString().length;
+      const endOffset = startOffset + text.length;
+      
       setSelectionRange({
         paragraphIndex,
-        startOffset: startOffset >= 0 ? startOffset : selection.anchorOffset,
-        endOffset: endOffset > 0 ? endOffset : selection.focusOffset,
+        startOffset,
+        endOffset,
         text,
       });
     }
 
-    const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     setToolbarPos({ x: rect.left + rect.width / 2, y: rect.top - 10 });
   }, []);
@@ -225,20 +234,19 @@ const Reader = () => {
     const sorted = [...highlights].sort((a, b) => a.startOffset - b.startOffset);
     type Segment = { text: string; highlight: Highlight | null };
     const result: Segment[] = [];
-    let remaining = text;
-    let offset = 0;
+    let pos = 0;
 
     for (const hl of sorted) {
-      const start = hl.startOffset - offset;
-      const end = hl.endOffset - offset;
-      if (start < 0 || start >= remaining.length) continue;
-      if (start > 0) result.push({ text: remaining.slice(0, start), highlight: null });
-      result.push({ text: remaining.slice(start, Math.min(end, remaining.length)), highlight: hl });
-      const consumed = Math.min(end, remaining.length);
-      remaining = remaining.slice(consumed);
-      offset += consumed;
+      if (hl.startOffset < pos) continue; // skip overlapping
+      if (hl.startOffset > pos) {
+        result.push({ text: text.slice(pos, hl.startOffset), highlight: null });
+      }
+      result.push({ text: text.slice(hl.startOffset, hl.endOffset), highlight: hl });
+      pos = hl.endOffset;
     }
-    if (remaining) result.push({ text: remaining, highlight: null });
+    if (pos < text.length) {
+      result.push({ text: text.slice(pos), highlight: null });
+    }
 
     return (
       <>
@@ -274,6 +282,8 @@ const Reader = () => {
       default: return '';
     }
   };
+
+  const currentFontStyle = fontFamilies.find(f => f.key === fontFamily)?.style || fontFamilies[0].style;
 
   if (!book) return null;
 
@@ -320,6 +330,7 @@ const Reader = () => {
       <main
         ref={contentRef}
         className="flex-1 mx-auto w-full max-w-2xl px-5 sm:px-8 py-8"
+        style={{ textAlign, fontFamily: currentFontStyle }}
         onClick={() => setShowToolbar(prev => !prev)}
       >
         {book.content.map((para, idx) => {
@@ -343,7 +354,8 @@ const Reader = () => {
 
       {showToolbar && (
         <div className="sticky bottom-0 border-t border-border bg-card/90 backdrop-blur-lg transition-colors duration-300">
-          <div className="flex items-center justify-center gap-4 px-4 py-3">
+          <div className="flex items-center justify-center gap-3 px-4 py-3 flex-wrap">
+            {/* Font size controls */}
             <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.max(12, s - 2)); }} className="rounded-full p-2 hover:opacity-70">
               <Minus className="h-4 w-4 opacity-60" />
             </button>
@@ -354,8 +366,42 @@ const Reader = () => {
             <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.min(32, s + 2)); }} className="rounded-full p-2 hover:opacity-70">
               <Plus className="h-4 w-4 opacity-60" />
             </button>
-            <span className="text-xs opacity-60 ml-4">
-              {currentPage && book?.totalPages ? `${currentPage}/${book.totalPages}` : `${progress}%`}
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-border mx-1" />
+
+            {/* Font family */}
+            <div className="flex gap-0.5">
+              {fontFamilies.map(f => (
+                <button
+                  key={f.key}
+                  onClick={(e) => { e.stopPropagation(); setFontFamily(f.key); }}
+                  className={`text-[10px] px-2 py-1 rounded transition-colors ${fontFamily === f.key ? 'bg-primary text-primary-foreground' : 'opacity-50 hover:opacity-80'}`}
+                  style={{ fontFamily: f.style }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-border mx-1" />
+
+            {/* Text alignment */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setTextAlign(a => a === 'left' ? 'justify' : 'left'); }}
+              className="rounded-full p-2 hover:opacity-70"
+              title={textAlign === 'left' ? 'Justify text' : 'Align left'}
+            >
+              {textAlign === 'left' ? <AlignLeft className="h-4 w-4 opacity-60" /> : <AlignJustify className="h-4 w-4 opacity-60" />}
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-border mx-1" />
+
+            {/* Progress */}
+            <span className="text-xs opacity-60">
+              {progress}%{currentPage && book?.totalPages ? ` · ${currentPage}/${book.totalPages}` : ''}
             </span>
           </div>
         </div>
