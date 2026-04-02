@@ -36,6 +36,7 @@ export interface Book {
   lastReadAt: number;
   addedAt: number;
   totalParagraphs: number;
+  totalPages?: number;  // actual PDF page count
   readingStatus: ReadingStatus;
   pinned?: boolean;
 }

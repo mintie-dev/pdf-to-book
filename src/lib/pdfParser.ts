@@ -108,5 +108,5 @@ export async function extractTextFromPdf(file: File): Promise<{ title: string; p
   const title = file.name.replace(/\.pdf$/i, '').replace(/[_-]/g, ' ');
   const paragraphs = formattedParagraphs.map(p => p.text);
 
-  return { title, paragraphs, formattedParagraphs };
+  return { title, paragraphs, formattedParagraphs, pageCount: totalPages };
 }
