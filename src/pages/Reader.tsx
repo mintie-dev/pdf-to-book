@@ -55,6 +55,11 @@ const Reader = () => {
     maxReadParagraph.current = book.lastReadParagraph || 0;
     goalNotified.current = false;
     
+    // Calculate paragraphs-per-page ratio for accurate page counting
+    const paragraphsPerPage = book.totalPages && book.totalPages > 0
+      ? book.totalParagraphs / book.totalPages
+      : 1;
+    
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
@@ -67,9 +72,10 @@ const Reader = () => {
           const maxVisible = Math.max(...visible);
           const minIdx = Math.min(...visible);
           
-          // Log new pages read
+          // Log new pages read using actual page ratio
           if (maxVisible > maxReadParagraph.current) {
-            const newPages = maxVisible - maxReadParagraph.current;
+            const newParagraphs = maxVisible - maxReadParagraph.current;
+            const newPages = Math.max(1, Math.round(newParagraphs / paragraphsPerPage));
             logPagesRead(newPages);
             maxReadParagraph.current = maxVisible;
             
