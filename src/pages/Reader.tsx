@@ -354,7 +354,9 @@ const Reader = () => {
             <button onClick={(e) => { e.stopPropagation(); setFontSize(s => Math.min(32, s + 2)); }} className="rounded-full p-2 hover:opacity-70">
               <Plus className="h-4 w-4 opacity-60" />
             </button>
-            <span className="text-xs opacity-60 ml-4">{progress}%</span>
+            <span className="text-xs opacity-60 ml-4">
+              {currentPage && book?.totalPages ? `${currentPage}/${book.totalPages}` : `${progress}%`}
+            </span>
           </div>
         </div>
       )}
