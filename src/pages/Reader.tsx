@@ -215,6 +215,7 @@ const Reader = () => {
   };
 
   const progress = book ? Math.round((book.lastReadParagraph / Math.max(book.totalParagraphs, 1)) * 100) : 0;
+  const currentPage = book && book.totalPages ? Math.min(book.totalPages, Math.round((book.lastReadParagraph / Math.max(book.totalParagraphs, 1)) * book.totalPages) + 1) : null;
 
   const renderParagraph = (text: string, idx: number) => {
     if (!book) return text;
