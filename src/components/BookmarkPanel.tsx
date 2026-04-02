@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Bookmark, Highlight } from '@/types/book';
-import { X, BookmarkIcon, Highlighter, Trash2 } from 'lucide-react';
+import { X, BookmarkIcon, Highlighter, Trash2, ArrowUpDown } from 'lucide-react';
 
 interface BookmarkPanelProps {
   bookmarks: Bookmark[];
@@ -10,7 +11,22 @@ interface BookmarkPanelProps {
   onRemoveHighlight: (id: string) => void;
 }
 
+type SortMode = 'position' | 'color';
+
+const colorOrder: Record<string, number> = { yellow: 0, blue: 1, pink: 2, green: 3 };
+
 const BookmarkPanel = ({ bookmarks, highlights, onGoTo, onClose, onRemoveBookmark, onRemoveHighlight }: BookmarkPanelProps) => {
+  const [sortMode, setSortMode] = useState<SortMode>('position');
+
+  const sortedHighlights = [...highlights].sort((a, b) => {
+    if (sortMode === 'color') {
+      const ca = colorOrder[a.color] ?? 99;
+      const cb = colorOrder[b.color] ?? 99;
+      if (ca !== cb) return ca - cb;
+    }
+    return a.paragraphIndex - b.paragraphIndex;
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-foreground/20 backdrop-blur-sm" onClick={onClose}>
       <div
@@ -48,11 +64,21 @@ const BookmarkPanel = ({ bookmarks, highlights, onGoTo, onClose, onRemoveBookmar
         {/* Highlights */}
         {highlights.length > 0 && (
           <div>
-            <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              <Highlighter className="h-3.5 w-3.5" /> Highlights
-            </h4>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <Highlighter className="h-3.5 w-3.5" /> Highlights
+              </h4>
+              <button
+                onClick={() => setSortMode(s => s === 'position' ? 'color' : 'position')}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                title={`Sort by ${sortMode === 'position' ? 'color' : 'position'}`}
+              >
+                <ArrowUpDown className="h-3 w-3" />
+                {sortMode === 'position' ? 'By color' : 'By position'}
+              </button>
+            </div>
             <div className="space-y-1">
-              {highlights.sort((a, b) => a.paragraphIndex - b.paragraphIndex).map(h => (
+              {sortedHighlights.map(h => (
                 <div key={h.id} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-secondary">
                   <div className={`h-3 w-3 rounded-full flex-shrink-0 highlight-${h.color}`} />
                   <button onClick={() => onGoTo(h.paragraphIndex)} className="text-sm text-foreground text-left flex-1 line-clamp-2">
