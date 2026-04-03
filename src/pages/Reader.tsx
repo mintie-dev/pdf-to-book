@@ -77,6 +77,14 @@ const Reader = () => {
       saveBook(b);
     }
     setBook(b);
+    // Load persisted reader settings
+    if (!settingsLoaded.current) {
+      const saved = loadSettings(id);
+      setFontSize(saved.fontSize);
+      setFontFamily(saved.fontFamily);
+      setTextAlign(saved.textAlign);
+      settingsLoaded.current = true;
+    }
   }, [id, navigate]);
 
   useEffect(() => {
