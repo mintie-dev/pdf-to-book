@@ -24,6 +24,26 @@ const fontFamilies = [
   { key: 'mono', label: 'Mono', style: 'ui-monospace, "Courier New", monospace' },
 ];
 
+const SETTINGS_KEY = 'ebook-reader-settings';
+
+interface ReaderSettings {
+  fontSize: number;
+  fontFamily: string;
+  textAlign: 'left' | 'justify';
+}
+
+function loadSettings(bookId: string): ReaderSettings {
+  try {
+    const data = localStorage.getItem(`${SETTINGS_KEY}-${bookId}`);
+    if (data) return JSON.parse(data);
+  } catch {}
+  return { fontSize: 18, fontFamily: 'sans', textAlign: 'left' };
+}
+
+function persistSettings(bookId: string, settings: ReaderSettings) {
+  localStorage.setItem(`${SETTINGS_KEY}-${bookId}`, JSON.stringify(settings));
+}
+
 const Reader = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -31,6 +51,7 @@ const Reader = () => {
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState('sans');
   const [textAlign, setTextAlign] = useState<'left' | 'justify'>('left');
+  const settingsLoaded = useRef(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -56,7 +77,21 @@ const Reader = () => {
       saveBook(b);
     }
     setBook(b);
+    // Load persisted reader settings
+    if (!settingsLoaded.current) {
+      const saved = loadSettings(id);
+      setFontSize(saved.fontSize);
+      setFontFamily(saved.fontFamily);
+      setTextAlign(saved.textAlign);
+      settingsLoaded.current = true;
+    }
   }, [id, navigate]);
+
+  // Persist settings when they change
+  useEffect(() => {
+    if (!id || !settingsLoaded.current) return;
+    persistSettings(id, { fontSize, fontFamily, textAlign });
+  }, [id, fontSize, fontFamily, textAlign]);
 
   useEffect(() => {
     if (!book || !contentRef.current) return;
