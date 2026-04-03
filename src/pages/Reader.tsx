@@ -87,6 +87,12 @@ const Reader = () => {
     }
   }, [id, navigate]);
 
+  // Persist settings when they change
+  useEffect(() => {
+    if (!id || !settingsLoaded.current) return;
+    persistSettings(id, { fontSize, fontFamily, textAlign });
+  }, [id, fontSize, fontFamily, textAlign]);
+
   useEffect(() => {
     if (!book || !contentRef.current) return;
     maxReadParagraph.current = book.lastReadParagraph || 0;
